@@ -7,9 +7,24 @@ import subprocess
 
 sofiles = [ ]
 
+blacklist = [
+    '_LOBTree.so', '_LLBTree.so', 'cPersistence.so', '_zope_', 'cPickleCache.so',
+    '_LFBTree.so', '_OOBTree.so', '_IIBTree.so', '_OLBTree.so', '_IFBTree.so',
+    '_IOBTree.so', '_fsBTree.so',
+]
+
+def is_blacklisted(fn):
+    for name in blacklist:
+        if fn.startswith(name):
+            return True
+    return False
+
+
 for directory in sys.argv[2:]:
 
     for fn in os.listdir(directory):
+        if is_blacklisted(fn):
+            continue
         fn = os.path.join(directory, fn)
 
         if not fn.endswith(".so.o"):
