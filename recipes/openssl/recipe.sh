@@ -22,7 +22,16 @@ function build_openssl() {
 
 	push_arm
 
-	try ./Configure no-dso no-krb5 linux-armv4
+	if [ "X$ARCH" == "Xx86" ]; then
+		OPENSSL_ARCH="android-x86"
+	elif [[ "X$ARCH" == Xarmeabi* ]]; then
+		OPENSSL_ARCH="linux-armv4"
+	else
+		error "Unsupported architecture $ARCH"
+		exit -1
+	fi
+
+	try ./Configure no-dso no-krb5 $OPENSSL_ARCH
 	try make build_libs
 
 	pop_arm

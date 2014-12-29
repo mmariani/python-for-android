@@ -22,7 +22,7 @@ function shouldbuild_paramiko() {
 function build_paramiko() {
 	cd $BUILD_paramiko
 	push_arm
-	export EXTRA_CFLAGS="--host linux-armv"
+	export EXTRA_CFLAGS="--host $CFLAGS_HOST"
 	try $HOSTPYTHON setup.py install -O2
 	pop_arm
 }

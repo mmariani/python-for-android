@@ -20,9 +20,7 @@ function build_libyaml() {
 	cd $BUILD_libyaml
 
 	push_arm
-
-	# using arm-linux-eabi does not create a shared library
-	try ./configure --build=i686-pc-linux-gnu --host=arm-linux-androideabi
+	try ./configure --build=i686-pc-linux-gnu --host=$CONFIGURE_HOST
 	try make
 
 	try cp -L $BUILD_libyaml/src/.libs/libyaml.so $LIBS_PATH
