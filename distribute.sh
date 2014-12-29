@@ -155,7 +155,7 @@ function get_directory() {
 }
 
 function push_arm() {
-	info "Entering in ARM environment"
+	info "Entering in $ARCH environment"
 
 	# save for pop
 	export OLD_PATH=$PATH
@@ -177,6 +177,8 @@ function push_arm() {
 	export CFLAGS="-DANDROID -mandroid $OFLAG -fomit-frame-pointer --sysroot $NDKPLATFORM"
 	if [ "X$ARCH" == "Xarmeabi-v7a" ]; then
 		CFLAGS+=" -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -mthumb"
+	elif [ "X$ARCH" == "Xx86" ]; then
+		CFLAGS+=" -march=i686"
 	fi
 	export CXXFLAGS="$CFLAGS"
 
@@ -191,24 +193,30 @@ function push_arm() {
 		PYPLATFORM="linux"
 	fi
 
+	if [[ "X$ARCH" == Xarmeabi* ]]; then
+        export TOOLCHAIN_PREFIX=arm-linux-androideabi
+        export TOOLCHAIN_PATH_PREFIX=arm-linux-androideabi
+	elif [ "X$ARCH" == "Xx86" ]; then
+        export TOOLCHAIN_PREFIX=i686-linux-android
+        export TOOLCHAIN_PATH_PREFIX=x86
+	fi
+
     if [ "X$ANDROIDNDKVER" == "Xr5b" ]; then
+		# no x86
         export TOOLCHAIN_PREFIX=arm-eabi
         export TOOLCHAIN_VERSION=4.4.0
     elif [ "X${ANDROIDNDKVER:0:2}" == "Xr7" ] || [ "X${ANDROIDNDKVER:0:2}" == "Xr8" ]; then
-        export TOOLCHAIN_PREFIX=arm-linux-androideabi
         export TOOLCHAIN_VERSION=4.4.3
     elif  [ "X${ANDROIDNDKVER:0:2}" == "Xr9" ]; then
-        export TOOLCHAIN_PREFIX=arm-linux-androideabi
         export TOOLCHAIN_VERSION=4.8
     elif [ "X${ANDROIDNDKVER:0:3}" == "Xr10" ]; then
-        export TOOLCHAIN_PREFIX=arm-linux-androideabi
         export TOOLCHAIN_VERSION=4.9
     else
         echo "Error: Please report issue to enable support for newer ndk."
         exit 1
     fi
 
-	export PATH="$ANDROIDNDK/toolchains/$TOOLCHAIN_PREFIX-$TOOLCHAIN_VERSION/prebuilt/$PYPLATFORM-x86/bin/:$ANDROIDNDK/toolchains/$TOOLCHAIN_PREFIX-$TOOLCHAIN_VERSION/prebuilt/$PYPLATFORM-x86_64/bin/:$ANDROIDNDK:$ANDROIDSDK/tools:$PATH"
+	export PATH="$ANDROIDNDK/toolchains/$TOOLCHAIN_PATH_PREFIX-$TOOLCHAIN_VERSION/prebuilt/$PYPLATFORM-x86/bin/:$ANDROIDNDK/toolchains/$TOOLCHAIN_PATH_PREFIX-$TOOLCHAIN_VERSION/prebuilt/$PYPLATFORM-x86_64/bin/:$ANDROIDNDK:$ANDROIDSDK/tools:$PATH"
 
 	# search compiler in the path, to fail now instead of later.
 	CC=$(which $TOOLCHAIN_PREFIX-gcc)
@@ -242,7 +250,7 @@ function push_arm() {
 }
 
 function pop_arm() {
-	info "Leaving ARM enviromnent"
+	info "Leaving $ARCH enviromnent"
 	export PATH=$OLD_PATH
 	export CFLAGS=$OLD_CFLAGS
 	export CXXFLAGS=$OLD_CXXFLAGS
@@ -267,6 +275,7 @@ function usage() {
 	echo "  -m 'mod1 mod2'         Modules to include"
 	echo "  -f                     Restart from scratch (remove the current build)"
 	echo "  -x                     display expanded values (execute 'set -x')"
+	echo "  -a                     Host CPU architecture (armeabi or x86). Default is armeabi"
 	echo
 	echo "Advanced:"
 	echo "  -C                     Copy libraries instead of using biglink"
@@ -345,14 +354,25 @@ function run_prepare() {
 		exit 0
 	fi
 
+	if [[ "X$ARCH" == Xarmeabi* ]]; then
+		export NDKPLATFORM="$ANDROIDNDK/platforms/android-$ANDROIDAPI/arch-arm"
+		# using arm-linux-eabi does not create shared libraries
+		export CONFIGURE_HOST="arm-linux-androideabi"
+		export CFLAGS_HOST="linux-armv"
+	elif [ "X$ARCH" == "Xx86" ]; then
+		export NDKPLATFORM="$ANDROIDNDK/platforms/android-$ANDROIDAPI/arch-x86"
+		export CONFIGURE_HOST="i686-linux-android"
+		export CFLAGS_HOST="i686-linux-android"
+	else
+		error "Unsupported architecture $ARCH"
+		exit -1
+	fi
+
+	debug "Building for architecture: $ARCH"
 	debug "SDK located at $ANDROIDSDK"
 	debug "NDK located at $ANDROIDNDK"
 	debug "NDK version is $ANDROIDNDKVER"
 	debug "API level set to $ANDROIDAPI"
-
-	export NDKPLATFORM="$ANDROIDNDK/platforms/android-$ANDROIDAPI/arch-arm"
-	export ARCH="armeabi"
-	#export ARCH="armeabi-v7a" # not tested yet.
 
 	info "Check mandatory tools"
 	# ensure that some tools are existing
@@ -875,7 +895,10 @@ function arm_deduplicate() {
 
 
 # Do the build
-while getopts ":hCvlfxm:u:d:s" opt; do
+export ARCH=armeabi
+#export ARCH="armeabi-v7a" # not tested yet.
+
+while getopts ":hCvlfxm:a:u:d:s" opt; do
 	case $opt in
 		h)
 			usage
@@ -898,6 +921,9 @@ while getopts ":hCvlfxm:u:d:s" opt; do
 			;;
 		m)
 			MODULES="$OPTARG"
+			;;
+		a)
+			ARCH="$OPTARG"
 			;;
 		u)
 			MODULES_UPDATE="$OPTARG"

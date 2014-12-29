@@ -35,10 +35,10 @@ function build_pycrypto() {
 
 	export CC="$CC -I$BUILD_openssl/include"
 	export LDFLAGS="$LDFLAGS -L$LIBS_PATH -L$BUILD_openssl"
-	export EXTRA_CFLAGS="--host linux-armv"
+	export EXTRA_CFLAGS="--host $CFLAGS_HOST"
 
 	export ac_cv_func_malloc_0_nonnull=yes
-	try ./configure --host=arm-eabi --prefix="$BUILD_PATH/python-install" --enable-shared
+	try ./configure --host=$CONFIGURE_HOST --prefix="$BUILD_PATH/python-install" --enable-shared
 
 	try $HOSTPYTHON setup.py build_ext -v
 	try find build/lib.* -name "*.o" -exec $STRIP {} \;

@@ -34,6 +34,8 @@
 #endif
 
 #if BYTE_ORDER==LITTLE_ENDIAN
+// with x86, the magic union is already defined
+#ifdef __ARMEL__
 union magic {
   struct {
     ogg_int32_t lo;
@@ -41,6 +43,7 @@ union magic {
   } halves;
   ogg_int64_t whole;
 };
+#endif
 #endif 
 
 #if BYTE_ORDER==BIG_ENDIAN

@@ -8,7 +8,9 @@ BUILD_libxml2=$BUILD_PATH/libxml2/$(get_directory $URL_libxml2)
 RECIPE_libxml2=$RECIPES_PATH/libxml2
 
 function prebuild_libxml2() {
-	true
+	cd $BUILD_libxml2
+
+	cp -r $RECIPE_libxml2/override/* ./
 }
 
 function shouldbuild_libxml2() {
@@ -21,8 +23,7 @@ function build_libxml2() {
 	cd $BUILD_libxml2
 
 	push_arm
-
-	try ./configure --build=i686-pc-linux-gnu --host=arm-linux-eabi \
+	try ./configure --build=i686-pc-linux-gnu --host=$CONFIGURE_HOST \
 		--without-modules --without-legacy --without-history --without-debug --without-docbook --without-python
 	try $SED 's/ runtest\$(EXEEXT) \\/ \\/' Makefile
 	try $SED 's/ testrecurse\$(EXEEXT)$//' Makefile

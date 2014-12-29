@@ -13,6 +13,9 @@ function prebuild_libxslt() {
 		return
 	fi
 	try patch -p1 < $RECIPE_libxslt/fix-dlopen.patch
+
+	cp -r $RECIPE_libxml2/override/* ./
+
 	touch .patched
 }
 
@@ -27,7 +30,7 @@ function build_libxslt() {
 
 	push_arm
 
-	try ./configure --build=i686-pc-linux-gnu --host=arm-linux-eabi \
+	try ./configure --build=i686-pc-linux-gnu --host=$CONFIGURE_HOST \
 		--without-plugins --without-debug --without-python --without-crypto \
 		--with-libxml-src=$BUILD_libxml2
 	try make
