@@ -76,7 +76,7 @@ You can select a bootstrap with::
 The minimal bootstrap can be used with::
 
     ./build.py --package org.test.minimal --name __minimal --version 1 \
-               --private ~/code/testmininal/ --minsdk 9 --sdk 14 \
+               --private ~/code/testminimal/ --minsdk 9 --sdk 14 \
                --asset \
                debug
 
