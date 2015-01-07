@@ -221,7 +221,7 @@ def make_tar(tfn, source_dirs, ignore_path=[]):
     tf.close()
 
 
-def copy_to_assets(source_dirs, ignore_path=[]):
+def copy_to_assets(source_dirs, arch, ignore_path=[]):
     print 'copy_to_assets()', source_dirs, ignore_path
     for fn, afn in iterate_sources(source_dirs, ignore_path):
         if afn.endswith(".so"):
@@ -230,7 +230,7 @@ def copy_to_assets(source_dirs, ignore_path=[]):
             if "python2.7" in afn_dirname:
                 # python lib, strip the directory
                 afn_dirname = ""
-            dest_fn = join("libs", "armeabi", "libpy_{}".format(
+            dest_fn = join("libs", arch, "libpy_{}".format(
                 afn_dirname.replace("/", "_").replace(".", "") + basename(afn)))
         else:
             dest_fn = join('assets', afn)
@@ -360,11 +360,11 @@ def make_package(args):
     # Package up the private and public data.
     if args.use_assets:
         if args.private:
-            copy_to_assets(['private', args.private])
+            copy_to_assets(['private', args.private], args.arch)
         else:
-            copy_to_assets(['private'])
+            copy_to_assets(['private'], args.arch)
         if args.dir:
-            copy_to_assets([args.dir], args.ignore_path)
+            copy_to_assets([args.dir], args.arch, args.ignore_path)
     else:
         if args.private:
             make_tar('assets/private.mp3', ['private', args.private])
@@ -411,6 +411,8 @@ Package a Python application for Android.
 For this to work, Java and Ant need to be in your path, as does the
 tools directory of the Android SDK.
 ''')
+    ap.add_argument('--arch', dest='arch', default='armeabi',
+                    help=('Architecture, x86 or armeabi'))
     ap.add_argument('--assets', dest='use_assets', action='store_true',
                     help=('Copy the app into assets/ instead of .tar'))
     ap.add_argument('--package', dest='package',
