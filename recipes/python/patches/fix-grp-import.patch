@@ -1,0 +1,20 @@
+diff --git a/Modules/grpmodule.c b/Modules/grpmodule.c
+index 07de880..d07282a 100644
+--- a/Modules/grpmodule.c
++++ b/Modules/grpmodule.c
+@@ -7,6 +7,15 @@
+ #include <sys/types.h>
+ #include <grp.h>
+ 
++/*
++ * The following functions do not exist in Bionic.
++ * We define them as noops, getgrall will return
++ * an empty list.
++ */
++#define setgrent() ((void)0)
++#define endgrent() ((void)0)
++#define getgrent() ((struct group *)NULL)
++
+ static PyStructSequence_Field struct_group_type_fields[] = {
+    {"gr_name", "group name"},
+    {"gr_passwd", "password"},
